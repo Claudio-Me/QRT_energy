@@ -6,6 +6,11 @@ try:
     from .preprocessing_double_model import data_preprocessing_double_model
 except Exception:
     from preprocessing_double_model import data_preprocessing_double_model
+# NEW: save helper
+try:
+    from .utils import save_results_to_csv
+except Exception:
+    from utils import save_results_to_csv
 
 
 def launch_double_model(X_train: pd.DataFrame,
@@ -59,6 +64,9 @@ if __name__ == "__main__":
     print("Launching per-country TabPFN training and prediction...")
     test_preds_df = launch_double_model(X_train=X_train, Y_train=Y_train, X_test=X_test)
 
-    # Save the results in a csv file
-    test_preds_df.to_csv('double_model_test_predictions.csv', index_label='ID')
-    print("Test predictions saved to 'double_model_test_predictions.csv'.")
+    # Save the results using the shared utility (keeps ID alignment)
+    save_results_to_csv(
+        dataset_wit_IDs=X_test,
+        predictions=test_preds_df['predictions'].values,
+        file_name='double_model_test_predictions'
+    )
