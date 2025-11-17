@@ -7,8 +7,8 @@ from scipy.stats import spearmanr
 import pandas as pd
 
 from tabpfn import TabPFNRegressor
-from supp_material.utils import save_results_to_csv
-from supp_material.preprocessing import data_preprocessing
+from utils import save_results_to_csv
+from preprocessing import data_preprocessing
 
 if __name__ == "__main__":
     X_train = pd.read_csv('X_train.csv')
@@ -17,8 +17,6 @@ if __name__ == "__main__":
 
     print("Preprocessing training data...")
     X_train_processed, X_test_processed = data_preprocessing(X_train=X_train, Y_train=Y_train, X_test=X_test)
-    print(len(X_train_processed))
-    # X_train_processed.head()
 
 
 

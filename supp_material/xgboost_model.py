@@ -92,9 +92,9 @@ def define_param_grid(task_type: str = 'regression') -> dict:
         Parameter grid for GridSearchCV
     """
     param_grid = {
-        'n_estimators': [ 400, 500, 600, 700, 1000, 1400],
-        'max_depth': [ 3, 4, 5 , 7 ],
-        'learning_rate': [0.1, 0.01, 0.05, 0.001],
+        'n_estimators': [  700, 1000, 1400, 2000, 5000],
+        'max_depth': [ 3, 4 , 7 ],
+        'learning_rate': [0.1, 0.01, 0.05, 0.001, 0.0005],
         #'subsample': [0.8, 1.0],
         #'colsample_bytree': [0.8, 1.0],
         #'min_child_weight': [1, 3, 5]

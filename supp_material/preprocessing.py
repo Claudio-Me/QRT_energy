@@ -27,7 +27,7 @@ def drop_by_correlation(X_train, Y_train, X_test):
 
 
 def transform_in_categorical_(X_train, X_test):
-    categorical_cols = ["COUNTRY", "day_of_week", ] #"month_number"
+    categorical_cols = ["COUNTRY",  ] #"month_number" ,"day_of_week",
 
     for col in categorical_cols:
         X_train[col] = X_train[col].astype('category')
@@ -53,7 +53,7 @@ def find_day_of_the_week(X):
     # Compute day of week (0–6)
     df["day_of_week"] = df["DAY_ID"] % 7
     # Compute month index (approximate: every 30 days)
-    df["month_number"] = (df["DAY_ID"] // 30)
+    #df["month_number"] = (df["DAY_ID"] // 30)
 
 
     return df
@@ -104,7 +104,7 @@ def aggregate_fossil_energy(df: pd.DataFrame) -> pd.DataFrame:
     return out
 
 def drop_id_column(X_train, X_test):
-    columns_to_drop = ['ID', 'DAY_ID', "FR_RAIN", "FR_WIND"]
+    columns_to_drop = ['ID', 'DAY_ID']
     for col in columns_to_drop:
         X_train_dropped = X_train.drop(columns=[col])
         X_test_dropped = X_test.drop(columns=[col])
@@ -168,8 +168,8 @@ def data_preprocessing(X_train, Y_train, X_test):
     X_test = fill_missing_countries(X_test)
     X_train = find_max_exchange_days(X_train)
     X_test = find_max_exchange_days(X_test)
-    X_train = find_day_of_the_week(X_train)
-    X_test = find_day_of_the_week(X_test)
+    #X_train = find_day_of_the_week(X_train)
+    #X_test = find_day_of_the_week(X_test)
     X_test = add_total_energy_columns(X_test)
     X_train = add_total_energy_columns(X_train)
     X_test = find_holiday_features(X_test)
@@ -182,7 +182,7 @@ def data_preprocessing(X_train, Y_train, X_test):
 
     X_train, X_test = drop_id_column(X_train, X_test)
 
-    X_train, X_test = transform_in_categorical_(X_train, X_test)
+    #X_train, X_test = transform_in_categorical_(X_train, X_test)
     #X_train, X_test = drop_by_correlation(X_train, Y_train, X_test)
 
 
