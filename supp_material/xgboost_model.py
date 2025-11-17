@@ -92,9 +92,9 @@ def define_param_grid(task_type: str = 'regression') -> dict:
         Parameter grid for GridSearchCV
     """
     param_grid = {
-        'n_estimators': [  700, 1000, 1400, 2000, 5000],
-        'max_depth': [ 3, 4 , 7 ],
-        'learning_rate': [0.1, 0.01, 0.05, 0.001, 0.0005],
+        'n_estimators': [   5000, ],
+        'max_depth': [ 5, 7 ,8],
+        'learning_rate': [0.01, 0.001, 0.0005],
         #'subsample': [0.8, 1.0],
         #'colsample_bytree': [0.8, 1.0],
         #'min_child_weight': [1, 3, 5]
@@ -107,7 +107,8 @@ def perform_cross_validation(X_train: pd.DataFrame,
                              y_train: pd.DataFrame,
                              task_type: str = 'regression',
                              cv_folds: int = 5,
-                             interaction_costrain = None) -> tuple:
+                             interaction_costrain = None,
+                             param_grid = None) -> tuple:
 
     """
     Perform cross-validation and hyperparameter tuning.
@@ -144,7 +145,8 @@ def perform_cross_validation(X_train: pd.DataFrame,
         scoring = 'accuracy'
 
     # Get parameter grid
-    param_grid = define_param_grid(task_type)
+    if param_grid is None:
+        param_grid = define_param_grid(task_type)
 
     # Perform grid search with cross-validation
     print(f"Starting {cv_folds}-fold cross-validation...")
@@ -258,7 +260,8 @@ def launch_xgb(X_train: pd.DataFrame,
                cv_folds: int = 5,
                params_constrained = None,
                holdout_eval: bool = True,
-               holdout_size: float = 0.2) -> pd.DataFrame:
+               holdout_size: float = 0.2,
+               param_grid = None) -> pd.DataFrame:
     """
     Main function to train XGBoost model with cross-validation.
 
@@ -293,7 +296,8 @@ def launch_xgb(X_train: pd.DataFrame,
         y_train,
         task_type=task_type,
         cv_folds=cv_folds,
-        interaction_costrain= params_constrained
+        interaction_costrain= params_constrained,
+        param_grid = param_grid
     )
 
     # Print performance
