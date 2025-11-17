@@ -84,13 +84,84 @@ def fill_missing_countries(X):
 
 
     return df
+def aggregate_renewable_energy(df: pd.DataFrame) -> pd.DataFrame:
+    renewable_suffixes = ["HYDRO", "SOLAR", "WINDPOW"]
+    out = df.copy()
+    out["DE_RENEWABLE_ENERGY"] = out[[f"DE_{s}" for s in renewable_suffixes]].sum(axis=1, min_count=1)
+    out["FR_RENEWABLE_ENERGY"] = out[[f"FR_{s}" for s in renewable_suffixes]].sum(axis=1, min_count=1)
+    #out["TOTAL_RENEWABLE_ENERGY"] = out["DE_RENEWABLE_ENERGY"] + out["FR_RENEWABLE_ENERGY"]
+    #out = out.drop(columns=[f"DE_{s}" for s in renewable_suffixes] + [f"FR_{s}" for s in renewable_suffixes])
+    return out
+
+def aggregate_fossil_energy(df: pd.DataFrame) -> pd.DataFrame:
+
+    fossil_suffixes_de= ["GAS", "COAL",  "NUCLEAR" ,"LIGNITE"]
+    fossil_suffixes_fr= ["GAS", "COAL",  "NUCLEAR",]
+    out = df.copy()
+    out["DE_FOSSIL_ENERGY"] = out[[f"DE_{s}" for s in fossil_suffixes_de]].sum(axis=1, min_count=1)
+    out["FR_FOSSIL_ENERGY"] = out[[f"FR_{s}" for s in fossil_suffixes_fr]].sum(axis=1, min_count=1)
+    #out = out.drop(columns=[f"DE_{s}" for s in renewable_suffixes_de] + [f"FR_{s}" for s in renewable_suffixes_fr])
+    return out
 
 def drop_id_column(X_train, X_test):
-    columns_to_drop = ['ID']
+    columns_to_drop = ['ID', 'DAY_ID', "FR_RAIN", "FR_WIND"]
     for col in columns_to_drop:
         X_train_dropped = X_train.drop(columns=[col])
         X_test_dropped = X_test.drop(columns=[col])
     return X_train_dropped, X_test_dropped
+
+
+
+def add_total_energy_columns(df: pd.DataFrame) -> pd.DataFrame:
+
+    prod_suffixes_de = ["GAS", "COAL", "HYDRO", "NUCLEAR", "SOLAR", "WINDPOW", "LIGNITE"]
+    prod_suffixes_fr = ["GAS", "COAL", "HYDRO", "NUCLEAR", "SOLAR", "WINDPOW"]
+    out = df.copy()
+    out["DE_TOTAL_ENERGY"] = out[[f"DE_{s}" for s in prod_suffixes_de]].sum(axis=1, min_count=1)
+    out["FR_TOTAL_ENERGY"] = out[[f"FR_{s}" for s in prod_suffixes_fr]].sum(axis=1, min_count=1)
+    if "COUNTRY" in out.columns:
+        out["total_energy_production"] = (
+            out["DE_TOTAL_ENERGY"].where(out["COUNTRY"].str.upper().eq("DE"),
+            out["FR_TOTAL_ENERGY"])
+        )
+
+    out["DE_energy_leftover"] = out["DE_TOTAL_ENERGY"] - out["DE_CONSUMPTION"]
+    out["FR_energy_leftover"] = out["FR_TOTAL_ENERGY"] - out["FR_CONSUMPTION"]
+
+    return out
+
+
+
+def find_holiday_features(X):
+    # df is your dataframe with DAY_ID, DE_CONSUMPTION / FR_CONSUMPTION (or ...CONSUMPTON)
+
+
+    df = X.copy()
+    n_unique_days = df["DAY_ID"].nunique()
+    print("Unique DAY_ID count:", n_unique_days)
+
+    # --- 2) Global consumption (robust to CONSUMPTON typo)
+    de_cons = df.get("DE_CONSUMPTION")
+    fr_cons = df.get("FR_CONSUMPTION")
+
+
+    df["GLOBAL_CONSUMPTION"] = pd.to_numeric(de_cons, errors="coerce") + pd.to_numeric(fr_cons, errors="coerce")
+
+    # --- 3) Sum by day
+    by_day = df.groupby("DAY_ID", as_index=False)["GLOBAL_CONSUMPTION"].sum()
+
+    # --- 4) Bottom 0.33 quantile threshold
+    q33 = by_day["GLOBAL_CONSUMPTION"].quantile(0.33)
+    low_days = set(by_day.loc[by_day["GLOBAL_CONSUMPTION"] <= q33, "DAY_ID"])
+
+    # --- 5) Mark HOLIDAY on original df (True if day is in bottom-quantile set)
+    df["HOLIDAY"] = df["DAY_ID"].isin(low_days)
+
+    # (Optional) quick check
+    print("0.33-quantile threshold:", q33)
+    print("Number of HOLIDAY days:", len(low_days))
+    return df
+
 
 def data_preprocessing(X_train, Y_train, X_test):
     X_train = fill_missing_countries(X_train)
@@ -99,9 +170,19 @@ def data_preprocessing(X_train, Y_train, X_test):
     X_test = find_max_exchange_days(X_test)
     X_train = find_day_of_the_week(X_train)
     X_test = find_day_of_the_week(X_test)
+    X_test = add_total_energy_columns(X_test)
+    X_train = add_total_energy_columns(X_train)
+    X_test = find_holiday_features(X_test)
+    X_train = find_holiday_features(X_train)
+    #X_train = aggregate_fossil_energy(X_train)
+    #X_test = aggregate_fossil_energy(X_test)
+
+
+
+
     X_train, X_test = drop_id_column(X_train, X_test)
 
-    #X_train, X_test = transform_in_categorical_(X_train, X_test)
+    X_train, X_test = transform_in_categorical_(X_train, X_test)
     #X_train, X_test = drop_by_correlation(X_train, Y_train, X_test)
 
 

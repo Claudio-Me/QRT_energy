@@ -12,7 +12,7 @@ from supp_material.preprocessing import data_preprocessing
 
 if __name__ == "__main__":
     X_train = pd.read_csv('X_train.csv')
-    Y_train = pd.read_csv('Y_train.csv')
+    Y_train = pd.read_csv('y_train.csv')
     X_test = pd.read_csv('X_test.csv')
 
     print("Preprocessing training data...")
@@ -44,7 +44,9 @@ if __name__ == "__main__":
 
     regressor = TabPFNRegressor()  # Uses TabPFN-2.5 weights, trained on synthetic data only.
     # To use TabPFN v2:
-    # regressor = TabPFNRegressor.create_default_for_version(ModelVersion.V2)
+    regressor = TabPFNRegressor.create_default_for_version(ModelVersion.V2)
+
+
     regressor.fit(X_train_processed, Y_train['TARGET'])
 
     # Predict on the test set
