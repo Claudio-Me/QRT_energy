@@ -186,7 +186,9 @@ def transform_into_gaussian(X):
 
 def fill_nan_entries(X):
     df = X.copy()
+    df = df.drop(columns = ['COUNTRY'])
     df = df.fillna(df.mean())
+    df['COUNTRY'] = X['COUNTRY']
     return df
 
 
