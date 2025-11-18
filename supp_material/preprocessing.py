@@ -184,10 +184,15 @@ def transform_into_gaussian(X):
 
     return df_final
 
+def fill_nan_entries(X):
+    df = X.copy()
+    df = df.fillna(df.mean())
+    return df
+
 
 def data_preprocessing(X_train, Y_train, X_test, convert_categorical: bool = True):
-    X_train = fill_missing_countries(X_train)
-    X_test = fill_missing_countries(X_test)
+    #X_train = fill_missing_countries(X_train)
+    #X_test = fill_missing_countries(X_test)
     X_train = find_max_exchange_days(X_train)
     X_test = find_max_exchange_days(X_test)
     #X_train = find_day_of_the_week(X_train)
@@ -198,6 +203,8 @@ def data_preprocessing(X_train, Y_train, X_test, convert_categorical: bool = Tru
     X_train = find_holiday_features(X_train)
     X_train = aggregate_fossil_energy(X_train)
     X_test = aggregate_fossil_energy(X_test)
+    X_train = fill_nan_entries(X_train)
+    X_test = fill_nan_entries(X_test)
 
 
 
