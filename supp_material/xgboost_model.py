@@ -327,12 +327,14 @@ if __name__ == "__main__":
 
 
     param_grid = {
-        'n_estimators': [500, 5000, 60000],
-        'max_depth': [3, 4, 7],
-        'learning_rate': [0.05, 0.001, ],
-        # 'subsample': [0.8, 1.0],
-        # 'colsample_bytree': [0.8, 1.0],
-        # 'min_child_weight': [1, 3, 5]
+        'n_estimators': [500,800,1000, 1500 ],
+        'max_depth': [ 7],
+        'learning_rate': [0.01, 0.001, ],
+        'subsample': [0.8, 1.0],
+        'colsample_bytree': [0.8, 1.0],
+        'min_child_weight': [1, 3, 5],
+        'reg_alpha': [0, 1,2],
+        'reg_lambda': [0, 1,3]
     }
 
     X_train_processed, X_test_processed = data_preprocessing(X_train=X_train, Y_train=Y_train, X_test=X_test,
