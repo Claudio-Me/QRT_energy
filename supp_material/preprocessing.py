@@ -205,8 +205,10 @@ def data_preprocessing(X_train, Y_train, X_test, convert_categorical: bool = Tru
     X_train = find_holiday_features(X_train)
     X_train = aggregate_fossil_energy(X_train)
     X_test = aggregate_fossil_energy(X_test)
-    X_train = fill_nan_entries(X_train)
-    X_test = fill_nan_entries(X_test)
+    X_train = aggregate_renewable_energy(X_train)
+    X_test = aggregate_renewable_energy(X_test)
+    #X_train = fill_nan_entries(X_train)
+    #X_test = fill_nan_entries(X_test)
 
 
 
