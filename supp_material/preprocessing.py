@@ -1,7 +1,8 @@
-
 import  pandas as pd
 from scipy.stats import spearmanr
 import numpy as np
+from sklearn.preprocessing import PowerTransformer
+
 
 def metric_train(output, Y_clean):
     return 100 * (spearmanr(output, Y_clean).correlation)
@@ -17,9 +18,9 @@ def drop_by_correlation(X_train, Y_train, X_test):
 
     columns_to_keep = ['COUNTRY', 'COUNTRY_DE', 'COUNTRY_FR', "is_market_decupled"]
     columns_to_drop = [column for column in low_corr.index if column not in columns_to_keep]
-    X_dropped_train = X_train.drop(columns=columns_to_drop)
+    X_dropped_train = X_train.drop(columns=columns_to_drop, errors='ignore')
 
-    X_dropped_test = X_test.drop(columns=columns_to_drop)
+    X_dropped_test = X_test.drop(columns=columns_to_drop, errors='ignore')
 
     return X_dropped_train, X_dropped_test
 
@@ -37,13 +38,15 @@ def transform_in_categorical_(X_train, X_test):
 
 def find_max_exchange_days(X):
     df = X.copy()
-    # assuming df is your DataFrame
-    max_de_fr = df["DE_FR_EXCHANGE"].max(skipna=True)
-    max_fr_de = df["FR_DE_EXCHANGE"].max(skipna=True)
+    # Use 95th percentile (highest 5%) instead of max
+    max_de_fr = df["DE_FR_EXCHANGE"].dropna().quantile(0.95)
+    max_fr_de = df["FR_DE_EXCHANGE"].dropna().quantile(0.95)
+
+
 
     df["is_market_decupled"] = ~(
-            df["DE_FR_EXCHANGE"].eq(max_de_fr) |
-            df["FR_DE_EXCHANGE"].eq(max_fr_de)
+            df["DE_FR_EXCHANGE"].ge(max_de_fr) |
+            df["FR_DE_EXCHANGE"].ge(max_fr_de)
     )
 
     return df
@@ -78,7 +81,7 @@ def fill_missing_countries(X):
     # (Optional) report what was filled and what remains missing
     filled_rows = df.loc[to_fill, ["ID", "DAY_ID", "COUNTRY"]]
     remaining_missing = df["COUNTRY"].isna().sum()
-    print(f"Filled {to_fill.sum()} rows. Remaining missing COUNTRY: {remaining_missing}")
+
     # If you want to see which DAY_IDs were filled:
     # print(filled_rows.sort_values('DAY_ID'))
 
@@ -104,7 +107,7 @@ def aggregate_fossil_energy(df: pd.DataFrame) -> pd.DataFrame:
     return out
 
 def drop_id_column(X_train, X_test):
-    columns_to_drop = ['ID', 'DAY_ID']
+    columns_to_drop = ['ID', 'DAY_ID', 'DE_FR_EXCHANGE', 'FR_DE_EXCHANGE']
     for col in columns_to_drop:
         X_train_dropped = X_train.drop(columns=[col])
         X_test_dropped = X_test.drop(columns=[col])
@@ -134,7 +137,7 @@ def find_holiday_features(X):
 
     df = X.copy()
     n_unique_days = df["DAY_ID"].nunique()
-    print("Unique DAY_ID count:", n_unique_days)
+
 
     # --- 2) Global consumption (robust to CONSUMPTON typo)
     de_cons = df.get("DE_CONSUMPTION")
@@ -153,13 +156,34 @@ def find_holiday_features(X):
     # --- 5) Mark HOLIDAY on original df (True if day is in bottom-quantile set)
     df["HOLIDAY"] = df["DAY_ID"].isin(low_days)
 
-    # (Optional) quick check
-    print("0.33-quantile threshold:", q33)
-    print("Number of HOLIDAY days:", len(low_days))
+
     return df
 
+def transform_into_gaussian(X):
+    df= X.copy()
 
-def data_preprocessing(X_train, Y_train, X_test):
+    # Columns to exclude
+    exclude_cols = ['ID', 'DAY_ID', 'COUNTRY', 'COUNTRY_DE', 'COUNTRY_FR', 'is_market_decupled', 'HOLIDAY']
+    exclude_cols = [col for col in exclude_cols if col in df.columns]
+
+    # Select numeric columns except excluded ones
+    cols_to_transform = df.select_dtypes(include='number').drop(columns=exclude_cols, errors='ignore').columns
+
+    # Apply PowerTransformer only to selected columns
+    pt = PowerTransformer(method='yeo-johnson')
+    transformed = pt.fit_transform(df[cols_to_transform])
+
+    # Create DataFrame for transformed columns
+    df_transformed = pd.DataFrame(transformed, columns=cols_to_transform, index=df.index)
+
+    # Combine transformed and untouched columns
+    df_final = pd.concat([df_transformed, df[exclude_cols]], axis=1)
+
+
+    return df_final
+
+
+def data_preprocessing(X_train, Y_train, X_test, convert_categorical: bool = True):
     X_train = fill_missing_countries(X_train)
     X_test = fill_missing_countries(X_test)
     X_train = find_max_exchange_days(X_train)
@@ -170,15 +194,19 @@ def data_preprocessing(X_train, Y_train, X_test):
     X_train = add_total_energy_columns(X_train)
     X_test = find_holiday_features(X_test)
     X_train = find_holiday_features(X_train)
-    #X_train = aggregate_fossil_energy(X_train)
-    #X_test = aggregate_fossil_energy(X_test)
+    X_train = aggregate_fossil_energy(X_train)
+    X_test = aggregate_fossil_energy(X_test)
 
 
 
 
     X_train, X_test = drop_id_column(X_train, X_test)
 
-    #X_train, X_test = transform_in_categorical_(X_train, X_test)
+    X_train = transform_into_gaussian(X_train)
+    X_test = transform_into_gaussian(X_test)
+
+    if convert_categorical:
+        X_train, X_test = transform_in_categorical_(X_train, X_test)
     #X_train, X_test = drop_by_correlation(X_train, Y_train, X_test)
 
 

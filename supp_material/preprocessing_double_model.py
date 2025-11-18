@@ -141,7 +141,7 @@ def find_holiday_features(X, country: str = None):
     by_day = df.groupby("DAY_ID", as_index=False)[country + "_CONSUMPTION"].sum()
 
     # --- 4) Bottom 0.33 quantile threshold
-    q33 = by_day[country + "_CONSUMPTION"].quantile(0.33)
+    q33 = by_day[country + "_CONSUMPTION"].quantile(0.30)
     low_days = set(by_day.loc[by_day[country + "_CONSUMPTION"] <= q33, "DAY_ID"])
 
     # --- 5) Mark HOLIDAY on original df (True if day is in bottom-quantile set)
@@ -176,8 +176,8 @@ def remove_country_specific_columns(X, country: str):
 def data_preprocessing_double_model(X_train, Y_train, X_test, country: str, convert_to_categorical: bool = True):
     X_train = fill_missing_countries(X_train)
     X_test = fill_missing_countries(X_test)
-    X_train = find_max_exchange_days(X_train)
-    X_test = find_max_exchange_days(X_test)
+    #X_train = find_max_exchange_days(X_train)
+    #X_test = find_max_exchange_days(X_test)
     # X_train = find_day_of_the_week(X_train)
     # X_test = find_day_of_the_week(X_test)
     X_test = add_total_energy_columns(X_test)

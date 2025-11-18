@@ -5,6 +5,7 @@ from sklearn.model_selection import GridSearchCV, cross_val_score, train_test_sp
 from sklearn.metrics import mean_squared_error, r2_score, accuracy_score, classification_report, make_scorer
 from scipy.stats import spearmanr
 import warnings
+from preprocessing import data_preprocessing
 
 warnings.filterwarnings('ignore')
 
@@ -51,7 +52,6 @@ def create_country_interaction_constraints(feature_names):
     return constraints
 
 
-
 def spearman_scorer(y_true, y_pred):
     """
     Calculate Spearman correlation coefficient for use as a scoring metric.
@@ -72,11 +72,6 @@ def spearman_scorer(y_true, y_pred):
     return correlation
 
 
-
-
-
-
-
 def define_param_grid(task_type: str = 'regression') -> dict:
     """
     Define the parameter grid for hyperparameter tuning.
@@ -92,12 +87,12 @@ def define_param_grid(task_type: str = 'regression') -> dict:
         Parameter grid for GridSearchCV
     """
     param_grid = {
-        'n_estimators': [   5000, ],
-        'max_depth': [ 5, 7 ,8],
+        'n_estimators': [5000, ],
+        'max_depth': [5, 7, 8],
         'learning_rate': [0.01, 0.001, 0.0005],
-        #'subsample': [0.8, 1.0],
-        #'colsample_bytree': [0.8, 1.0],
-        #'min_child_weight': [1, 3, 5]
+        # 'subsample': [0.8, 1.0],
+        # 'colsample_bytree': [0.8, 1.0],
+        # 'min_child_weight': [1, 3, 5]
     }
 
     return param_grid
@@ -107,9 +102,8 @@ def perform_cross_validation(X_train: pd.DataFrame,
                              y_train: pd.DataFrame,
                              task_type: str = 'regression',
                              cv_folds: int = 5,
-                             interaction_costrain = None,
-                             param_grid = None) -> tuple:
-
+                             interaction_costrain=None,
+                             param_grid=None) -> tuple:
     """
     Perform cross-validation and hyperparameter tuning.
 
@@ -135,7 +129,7 @@ def perform_cross_validation(X_train: pd.DataFrame,
             random_state=42,
             n_jobs=-1,
             enable_categorical=True,
-            #early_stopping_rounds=10,
+            # early_stopping_rounds=10,
             interaction_constraints=interaction_costrain
         )
         # Use Spearman correlation as scoring metric
@@ -209,7 +203,7 @@ def evaluate_model(model, X_train: pd.DataFrame, y_train: pd.DataFrame,
     y_pred_train = model.predict(X_train)
     print("Training Set Performance:")
     if task_type == 'regression':
-        spearman_corr, spearman_pval = spearmanr(y_train, y_pred_train)
+        spearman_corr, spearman_pval = spearmanr(y_pred_train, y_train)
         mse = mean_squared_error(y_train, y_pred_train)
         rmse = np.sqrt(mse)
         r2 = r2_score(y_train, y_pred_train)
@@ -246,11 +240,12 @@ def evaluate_model(model, X_train: pd.DataFrame, y_train: pd.DataFrame,
 
         if task_type == 'regression':
             holdout_spear = spearmanr(y_val, y_val_pred).correlation
-            print(f"Spearman correlation on the holdout set: { holdout_spear:.4f}")
+            print(f"Spearman correlation on the holdout set: {holdout_spear:.4f}")
         else:
             holdout_acc = accuracy_score(y_val, y_val_pred)
             print(f"Accuracy on the holdout set: {100 * holdout_acc:.1f}%")
         print()
+
 
 def launch_xgb(X_train: pd.DataFrame,
                y_train: pd.DataFrame,
@@ -258,10 +253,10 @@ def launch_xgb(X_train: pd.DataFrame,
                run_test: bool = False,
                task_type: str = 'regression',
                cv_folds: int = 5,
-               params_constrained = None,
+               params_constrained=None,
                holdout_eval: bool = True,
                holdout_size: float = 0.2,
-               param_grid = None) -> pd.DataFrame:
+               param_grid=None) -> pd.DataFrame:
     """
     Main function to train XGBoost model with cross-validation.
 
@@ -288,16 +283,14 @@ def launch_xgb(X_train: pd.DataFrame,
     print("Starting XGBoost Model Training Pipeline...")
     print("-" * 60)
 
-
-
     # Perform cross-validation
     best_model, best_params, best_score = perform_cross_validation(
         X_train,
         y_train,
         task_type=task_type,
         cv_folds=cv_folds,
-        interaction_costrain= params_constrained,
-        param_grid = param_grid
+        interaction_costrain=params_constrained,
+        param_grid=param_grid
     )
 
     # Print performance
@@ -327,22 +320,31 @@ if __name__ == "__main__":
     # Create sample data
     from sklearn.datasets import make_regression, make_classification
 
-    # For regression task
-    X, y = make_regression(n_samples=1000, n_features=10, random_state=42)
-    X_train_df = pd.DataFrame(X, columns=[f'feature_{i}' for i in range(X.shape[1])])
-    y_train_df = pd.DataFrame(y, columns=['target'])
-    X_test_df = pd.DataFrame(X[:100], columns=[f'feature_{i}' for i in range(X.shape[1])])
+    X_train = pd.read_csv('X_train.csv')
+    Y_train = pd.read_csv('y_train.csv')
+    X_test = pd.read_csv('X_test.csv')
 
-    # Run the model
-    test_predictions = launch_xgb(
-        X_train=X_train_df,
-        y_train=y_train_df,
-        X_test=X_test_df,
+
+
+    param_grid = {
+        'n_estimators': [500, 5000, 60000],
+        'max_depth': [3, 4, 7],
+        'learning_rate': [0.05, 0.001, ],
+        # 'subsample': [0.8, 1.0],
+        # 'colsample_bytree': [0.8, 1.0],
+        # 'min_child_weight': [1, 3, 5]
+    }
+
+    X_train_processed, X_test_processed = data_preprocessing(X_train=X_train, Y_train=Y_train, X_test=X_test,
+                                                             convert_categorical=True)
+
+    predictions = launch_xgb(
+        X_train=X_train_processed,
+        y_train=Y_train['TARGET'],
+        X_test=X_test_processed,
         run_test=True,
-        task_type='regression',
-        cv_folds=5
+        task_type='regression',  # or 'classification'
+        cv_folds=10,
+        # params_constrained=interaction_constraints,
+        param_grid=param_grid
     )
-
-    if test_predictions is not None:
-        print("\nTest Predictions Sample:")
-        print(test_predictions.head())

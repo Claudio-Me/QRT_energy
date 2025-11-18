@@ -16,7 +16,7 @@ if __name__ == "__main__":
     X_test = pd.read_csv('X_test.csv')
 
     print("Preprocessing training data...")
-    X_train_processed, X_test_processed = data_preprocessing(X_train=X_train, Y_train=Y_train, X_test=X_test)
+    X_train_processed, X_test_processed = data_preprocessing(X_train=X_train, Y_train=Y_train, X_test=X_test, convert_categorical=False)
 
 
 
