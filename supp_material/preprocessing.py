@@ -108,9 +108,11 @@ def aggregate_fossil_energy(df: pd.DataFrame) -> pd.DataFrame:
 
 def drop_id_column(X_train, X_test):
     columns_to_drop = ['ID', 'DAY_ID', 'DE_FR_EXCHANGE', 'FR_DE_EXCHANGE']
+    X_train_dropped = X_train.copy()
+    X_test_dropped = X_test.copy()
     for col in columns_to_drop:
-        X_train_dropped = X_train.drop(columns=[col])
-        X_test_dropped = X_test.drop(columns=[col])
+        X_train_dropped = X_train_dropped.drop(columns=[col])
+        X_test_dropped = X_test_dropped.drop(columns=[col])
     return X_train_dropped, X_test_dropped
 
 
@@ -202,8 +204,8 @@ def data_preprocessing(X_train, Y_train, X_test, convert_categorical: bool = Tru
 
     X_train, X_test = drop_id_column(X_train, X_test)
 
-    X_train = transform_into_gaussian(X_train)
-    X_test = transform_into_gaussian(X_test)
+    #X_train = transform_into_gaussian(X_train)
+    #X_test = transform_into_gaussian(X_test)
 
     if convert_categorical:
         X_train, X_test = transform_in_categorical_(X_train, X_test)
