@@ -350,3 +350,8 @@ if __name__ == "__main__":
         # params_constrained=interaction_constraints,
         param_grid=param_grid
     )
+
+
+    if predictions is not None:
+        predictions.to_csv('xgboost_test_predictions.csv', index=False)
+        print("Test predictions saved to 'xgboost_test_predictions.csv'")
