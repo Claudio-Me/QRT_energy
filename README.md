@@ -4,8 +4,7 @@ Simple experimentation code for training energy price/target prediction models o
 - XGBoost (`supp_material/xgboost_model.py`)
 - TabPFN (`supp_material/TabPFN.py`)
 
-
-# We reccomend first running the jupiter notebook `supp_material/EDA_and_baseline_models.ipynb` to explore the data and get a feel for baseline models.
+### We reccomend first running the jupiter notebook `supp_material/EDA_and_baseline_models.ipynb` to explore the data and get a feel for baseline models.
 Read below only if you run into problems or want to understand the code structure.
 
 Preprocessing lives in `supp_material/preprocessing.py`. CSV saving helper is in `supp_material/utils.py`.
