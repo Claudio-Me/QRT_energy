@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to AI AGENTS when working with code in this repository.
 
 ## Project Overview
 
@@ -20,8 +20,6 @@ Scripts expect these files in the working directory:
 - `X_train.csv` - Training features (includes `ID`, `DAY_ID`, `COUNTRY`, and feature columns)
 - `y_train.csv` - Training targets (includes `TARGET` column)
 - `X_test.csv` - Test features (same schema as `X_train.csv`)
-
-
 
 
 # Challenge Goals
@@ -100,6 +98,7 @@ We provide three CSV datasets:
 # Submission Format
 Solution files must contain **two columns**: `ID` and `TARGET`, where `ID` matches `X_test`.  
 An example submission with random predictions is provided—see the benchmark notebook in the supplementary material.
+
 
 
 ## Running Models
